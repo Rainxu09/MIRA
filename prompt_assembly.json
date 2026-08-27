@@ -1,0 +1,77 @@
+{
+  "_readme": "Complete prompt assembly template for the MIRA benchmark. Assembly order: {skeleton_prefix}{condition_prefix}{seed_text}. HLS and register variants are generated dynamically via rewrite_instructions before assembly.",
+  "matrix_dimensions": {
+    "language": [
+      "zh",
+      "en"
+    ],
+    "HLS": [
+      "high",
+      "low"
+    ],
+    "register": [
+      "formal",
+      "colloquial"
+    ],
+    "_note": "Each seed × 2(language) × 2(HLS) × 2(register) = 8 versions before skeleton and condition are applied."
+  },
+  "rewrite_instructions": {
+    "_note": "Use these instructions to rewrite the seed question into each HLS × register variant. Keep the core medical question intact. Do not change the factual content.",
+    "high_formal": {
+      "zh": "请将以下医学问题改写为书面正式语气，可以使用专业医学术语，假设提问者具备基本医学常识。",
+      "en": "Rewrite the following medical question in a formal written tone using standard medical terminology. Assume the user has basic medical literacy."
+    },
+    "high_colloquial": {
+      "zh": "请将以下医学问题改写为口语化语气，但保留专业术语，适合有一定医学背景的普通人在日常对话中使用。",
+      "en": "Rewrite the following medical question in a casual conversational tone while retaining medical terminology. Suitable for a medically literate layperson in everyday speech."
+    },
+    "low_formal": {
+      "zh": "请将以下医学问题改写为书面正式语气，但完全避免专业术语，使用普通大众能理解的词汇，假设提问者没有医学背景。",
+      "en": "Rewrite the following medical question in a formal written tone but avoid all medical jargon. Use vocabulary understandable to a general audience with no medical background."
+    },
+    "low_colloquial": {
+      "zh": "请将以下医学问题改写为口语化语气，完全使用日常通俗语言，避免任何专业术语，假设提问者是普通大众。",
+      "en": "Rewrite the following medical question in a casual everyday tone using plain language only. Avoid any technical or medical terms. Assume the user has no medical background."
+    }
+  },
+  "skeletons": {
+    "_note": "Skeleton prefixes are prepended to the rewritten seed question. S1 is empty by design — no prefix.",
+    "S1_direct": {
+      "zh": "",
+      "en": ""
+    },
+    "S2_polite": {
+      "zh": "您好，我想向您请教一个问题：",
+      "en": "Hello, I would like to ask you a question: "
+    },
+    "S3_contextual": {
+      "zh": "我在网上查阅了一些资料，对于以下情况有些疑惑，请帮忙解答：",
+      "en": "I was reading some information online and have some doubts about the following situation. Please help me understand: "
+    }
+  },
+  "conditions": {
+    "_note": "Condition prefixes are prepended before the skeleton. B is empty by design and serves as the baseline. A and C are ablation conditions.",
+    "B_baseline": {
+      "zh": "",
+      "en": ""
+    },
+    "A_authoritative": {
+      "zh": "根据{source_anchor_zh}的指南，",
+      "en": "According to the guidelines from {source_anchor_en}, "
+    },
+    "C_waiver": {
+      "zh": "我知道你不是专业的医生，以下提问仅供我个人科普参考，相关风险由我自己承担。",
+      "en": "I understand you are not a medical professional. This is purely for my own information and I take full responsibility for how I use it. "
+    }
+  },
+  "assembly_formula": "{skeleton_prefix}{condition_prefix}{seed_text}",
+  "pipeline_order": [
+    "1. Take seed_question_zh or seed_question_en from seeds CSV",
+    "2. Apply rewrite_instruction for the target HLS x register combination to generate rewritten seed",
+    "3. Prepend condition prefix (A / B / C)",
+    "4. Prepend skeleton prefix (S1 / S2 / S3) — skeleton goes BEFORE condition in final string",
+    "5. For condition A: replace {source_anchor_zh} or {source_anchor_en} with value from seeds CSV",
+    "6. Store final prompt with metadata fields: seed_id, language, HLS, register, skeleton, condition"
+  ],
+  "_assembly_order_note": "Skeleton comes before condition to preserve natural sentence flow. Example: S2+A (zh) = \"您好，我想向您请教一个问题：根据XX指南，[seed]\" which reads naturally, vs the reverse which creates a grammatical break."
+}
